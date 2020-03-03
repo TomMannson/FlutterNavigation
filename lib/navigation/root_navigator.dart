@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import "package:flutter/material.dart";
-import 'package:flutter_navigation/screens/screen_one/screen_one.dart';
 import 'package:flutter_navigation/screens/screen_three/login_screen.dart';
 import 'package:provider/provider.dart';
 
+import 'actions/actions.dart';
+import 'coortinator.dart';
+import 'custom_navigator.dart';
+
 class NavRoot extends StatefulWidget {
-  final Link initialLink;
+  final String initialLink;
   final CurrentNavState startUp;
 
   const NavRoot({
@@ -22,7 +27,7 @@ class _NavRootState extends State<NavRoot> implements NavDelegate {
   CurrentNavState _navState = new CurrentNavState();
   GlobalKey<NavigatorState> key;
   NavObserver observer;
-  Link startLink;
+  String startLink;
 
   void initState() {
     startLink = widget.initialLink;
@@ -36,20 +41,38 @@ class _NavRootState extends State<NavRoot> implements NavDelegate {
     return MultiProvider(
       providers: [
         Provider.value(value: delegate),
+        Provider.value(value: Router()),
       ],
       child: MaterialApp(
+        builder: buildNavigator,
         navigatorObservers: [observer],
         navigatorKey: key,
         title: 'Flutter Demo',
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
+        onGenerateRoute: generateRoute,
         home: buildDefaultHomeContent(),
       ),
     );
   }
 
-  Widget buildDefaultHomeContent() => ScreenOne();
+  Widget buildNavigator(BuildContext context, Widget widget) {
+    Navigator navigator = widget;
+    return CustomNavigator(
+      key: navigator.key,
+      initialRoute: navigator.initialRoute,
+      onGenerateRoute: navigator.onGenerateRoute,
+      onUnknownRoute: navigator.onUnknownRoute,
+      observers: navigator.observers,
+    );
+  }
+
+  Widget buildDefaultHomeContent() {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
+  }
 
   @override
   Future<Result> navigate<Data, Result>(BuildContext ctx,
@@ -59,6 +82,18 @@ class _NavRootState extends State<NavRoot> implements NavDelegate {
     return canRoute.navigateConditionally(
         ctx, navigate, action, data, key.currentState);
   }
+
+  @override
+  String _getLink() {
+    return startLink;
+  }
+
+  Route generateRoute(RouteSettings settings) {}
+}
+
+class DeepLinkFactory {
+//  Route
+
 }
 
 class NavObserver extends NavigatorObserver {
@@ -68,18 +103,30 @@ class NavObserver extends NavigatorObserver {
 
   @override
   void didPush(Route route, Route previousRoute) {
-    _navRootState._navState.last = route;
+//    _navRootState._navState.last = route;
   }
+
+  @override
+  void didReplace({Route<dynamic> newRoute, Route<dynamic> oldRoute}) {}
+
+  @override
+  void didRemove(Route route, Route previousRoute) {}
+
+  @override
+  void didPop(Route route, Route previousRoute) {}
 }
 
 abstract class NavDelegate {
   Future<Result> navigate<Data, Result>(BuildContext ctx,
       NavigationHandler<Data, dynamic> navigate, RoutingMethod<Result> action,
       [Data data]);
+
+  String _getLink();
 }
 
 class CurrentNavState {
-  Route last;
+  NavAction pendingNav;
+  bool isLoggedIn;
 }
 
 class NavigateTo {
@@ -90,17 +137,19 @@ class NavigateTo {
         .navigate<Data, Result>(ctx, handler, NavigatePush(), data);
   }
 
-  static Future<Result> replace<Data, Result>(
+  static void replace<Data, Result>(
       BuildContext ctx, NavigationHandler<Data, Result> handler,
       [Data data]) {
-    return Provider.of<NavDelegate>(ctx, listen: false)
+    Provider.of<NavDelegate>(ctx, listen: false)
         .navigate<Data, Result>(ctx, handler, NavigateReplace(), data);
   }
 }
 
 abstract class NavigationHandler<Data, Result> {
   Future<RouteAction<Result>> canRoute(
-          BuildContext ctx, CurrentNavState state) async =>
+    BuildContext ctx,
+    CurrentNavState state,
+  ) async =>
       GoTo();
 
   Widget createTarget(BuildContext ctx, Data data);
@@ -179,11 +228,40 @@ class AuthenticationAction<T> extends GoTo<T> {
     Object data,
     NavigatorState navigator,
   ) async {
-    final data = await NavigateTo.push(context, LoginScreenStarter());
+    final result = await NavigateTo.push(context, LoginScreenStarter());
 
     return super
         .navigateConditionally(context, handler, action, data, navigator);
   }
 }
 
-class Link {}
+class Link {
+  String link;
+
+  Link(this.link);
+}
+
+class NavResult {}
+
+class OkResult extends NavResult {}
+
+class CancelResult extends NavResult {}
+
+abstract class NavFilters {
+  NavResult filterCheck(CurrentNavState state, NavAction action);
+}
+
+class NavigationDispather {
+  List<NavFilters> filters = [];
+
+  NavigationDispather(this.filters);
+
+  void performNavAction(CurrentNavState state, NavAction action) {
+    for (NavFilters filter in filters) {
+      NavResult result = filter.filterCheck(state, action);
+      if (result is CancelResult) {
+        return;
+      }
+    }
+  }
+}

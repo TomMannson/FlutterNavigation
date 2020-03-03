@@ -2,26 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_navigation/navigation/root_navigator.dart';
 import 'package:flutter_navigation/screens/screen_two/new_screen.dart';
 
-class ScreenOne extends StatefulWidget {
-  ScreenOne({Key key, this.title = "Screen One"}) : super(key: key);
+class SplashScreen extends StatefulWidget {
+  SplashScreen({Key key, this.title = "Screen One"}) : super(key: key);
   final String title;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<ScreenOne> {
+class _MyHomePageState extends State<SplashScreen> {
   bool _isProgress = false;
 
   void _incrementCounter() async {
     setState(() {
       _isProgress = true;
     });
-    final data = await NavigateTo.replace(context, NewsScreenStarter());
+    NavigateTo.replace(context, NewsScreenStarter());
     setState(() {
       _isProgress = false;
     });
-    data.toString();
   }
 
   @override
