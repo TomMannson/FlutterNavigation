@@ -1,26 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_navigation/navigation/root_navigator.dart';
-import 'package:flutter_navigation/screens/screen_two/new_screen.dart';
+import 'package:flutter_navigation/screens/news_screen/new_screen.dart';
 
 class SplashScreen extends StatefulWidget {
-  SplashScreen({Key key, this.title = "Screen One"}) : super(key: key);
+  SplashScreen({Key key, this.title = "Splash Screen"}) : super(key: key);
   final String title;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
+
+  static Route route() {
+    return MaterialPageRoute(builder: (ctx) => SplashScreen());
+  }
 }
 
 class _MyHomePageState extends State<SplashScreen> {
   bool _isProgress = false;
 
   void _incrementCounter() async {
-    setState(() {
-      _isProgress = true;
-    });
-    NavigateTo.replace(context, NewsScreenStarter());
-    setState(() {
-      _isProgress = false;
-    });
+    Navigator.of(context).pushReplacement(NewsScreen.route());
   }
 
   @override

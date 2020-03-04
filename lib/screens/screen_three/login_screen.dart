@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_navigation/navigation/root_navigator.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
-  LoginScreen({Key key, this.title = "Flutter Page Three"}) : super(key: key);
+  LoginScreen(this.returnRoute, {Key key, this.title = "Login Page"})
+      : super(key: key);
   final String title;
+  final Route returnRoute;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
+
+  static Route route(Route returnRoute) {
+    return MaterialPageRoute(builder: (ctx) => LoginScreen(returnRoute));
+  }
 }
 
 class _MyHomePageState extends State<LoginScreen> {
   int _counter = 0;
 
   void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+    Provider.of<NavDelegate>(context, listen: false).getNavState().isLoggedIn =
+        true;
+    Navigator.of(context).pushReplacement(widget.returnRoute);
   }
 
   @override
@@ -27,29 +34,14 @@ class _MyHomePageState extends State<LoginScreen> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
+          children: <Widget>[TextField(), TextField()],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
-        child: Icon(Icons.add),
+        child: Icon(Icons.send),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
-  }
-}
-
-class LoginScreenStarter extends NavigationHandler<dynamic, bool> {
-  @override
-  Widget createTarget(BuildContext ctx, data) {
-    return LoginScreen();
   }
 }

@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_navigation/navigation/root_navigator.dart';
+import 'package:flutter_navigation/navigation/custom_navigator.dart';
 
 class NewsScreen extends StatefulWidget {
-  NewsScreen({Key key, this.title = "Flutter Page Two"}) : super(key: key);
+  NewsScreen({Key key, this.title = "News Page"}) : super(key: key);
   final String title;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
+
+  static Route route() {
+    return AttributeMaterialPageRoute(
+      builder: (ctx) => NewsScreen(),
+      attributes: ["Auth"],
+    );
+  }
 }
 
 class _MyHomePageState extends State<NewsScreen> {
@@ -44,20 +51,5 @@ class _MyHomePageState extends State<NewsScreen> {
         child: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
-  }
-}
-
-class NewsScreenStarter extends NavigationHandler<dynamic, bool> {
-  @override
-  Widget createTarget(BuildContext ctx, data) => NewsScreen();
-
-  @override
-  Future<RouteAction<bool>> canRoute(
-    BuildContext ctx,
-    CurrentNavState state,
-  ) async {
-    await Future.delayed(Duration(seconds: 2));
-
-    return AuthenticationAction();
   }
 }
